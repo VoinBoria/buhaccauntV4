@@ -174,7 +174,19 @@ class MainActivity : ComponentActivity() {
                 val intent = Intent(this@MainActivity, TaskActivity::class.java)
                 startActivity(intent)
             },
-            viewModel = viewModel
+            viewModel = viewModel,
+            onIncomeCategoryClick = { category ->
+                val intent = Intent(this@MainActivity, IncomeTransactionActivity::class.java).apply {
+                    putExtra("categoryName", category)
+                }
+                startActivity(intent)
+            },
+            onExpenseCategoryClick = { category ->
+                val intent = Intent(this@MainActivity, ExpenseTransactionActivity::class.java).apply {
+                    putExtra("categoryName", category)
+                }
+                startActivity(intent)
+            }
         )
     }
 }
@@ -399,7 +411,9 @@ fun MainScreen(
     onNavigateToAllTransactionExpense: () -> Unit,
     onNavigateToBudgetPlanning: () -> Unit,
     onNavigateToTaskActivity: () -> Unit,
-    viewModel: MainViewModel = viewModel()
+    viewModel: MainViewModel = viewModel(),
+    onIncomeCategoryClick: (String) -> Unit, // Додаємо параметр для обробки натискань на категорію доходів
+    onExpenseCategoryClick: (String) -> Unit // Додаємо параметр для обробки натискань на категорію витрат
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -500,7 +514,7 @@ fun MainScreen(
                                 onClick = { showIncomes = !showIncomes }
                             )
                             AnimatedVisibility(visible = showIncomes) {
-                                IncomeList(incomes = incomes)
+                                IncomeList(incomes = incomes, onCategoryClick = onIncomeCategoryClick)
                             }
                             Spacer(modifier = Modifier.height(16.dp))
 
@@ -515,7 +529,7 @@ fun MainScreen(
                                 onClick = { showExpenses = !showExpenses }
                             )
                             AnimatedVisibility(visible = showExpenses) {
-                                ExpensesList(expenses = expenses)
+                                ExpensesList(expenses = expenses, onCategoryClick = onExpenseCategoryClick)
                             }
 
                             Spacer(modifier = Modifier.height(32.dp))
@@ -920,7 +934,10 @@ fun ExpandableButtonWithAmount(
     }
 }
 @Composable
-fun IncomeList(incomes: Map<String, Double>) {
+fun IncomeList(
+    incomes: Map<String, Double>,
+    onCategoryClick: (String) -> Unit // Додаємо параметр для обробки переходу
+) {
     // Сортування категорій за сумою у спадному порядку
     val sortedIncomes = incomes.toList().sortedByDescending { (_, amount) -> amount }
 
@@ -942,6 +959,7 @@ fun IncomeList(incomes: Map<String, Double>) {
                         ),
                         shape = RoundedCornerShape(8.dp)
                     )
+                    .clickable { onCategoryClick(category) } // Додаємо обробку натискання
             ) {
                 Row(
                     modifier = Modifier
@@ -965,7 +983,10 @@ fun IncomeList(incomes: Map<String, Double>) {
 }
 
 @Composable
-fun ExpensesList(expenses: Map<String, Double>) {
+fun ExpensesList(
+    expenses: Map<String, Double>,
+    onCategoryClick: (String) -> Unit // Додаємо параметр для обробки переходу
+) {
     // Сортування категорій за сумою у зростаючому порядку
     val sortedExpenses = expenses.toList().sortedBy { (_, amount) -> amount }
 
@@ -987,6 +1008,7 @@ fun ExpensesList(expenses: Map<String, Double>) {
                         ),
                         shape = RoundedCornerShape(8.dp)
                     )
+                    .clickable { onCategoryClick(category) } // Додаємо обробку натискання
             ) {
                 Row(
                     modifier = Modifier
